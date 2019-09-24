@@ -53,25 +53,26 @@ class BambooHRScraper():
             return None
 
     def dumpEmployeesToFile(self):
-        today = str(datetime.datetime.today().strftime('%Y-%m-%d'))
+        today = str((datetime.datetime.today().strftime('%Y-%m-%d')))
         employees = self.getEmployeesJSON()
-
         if not employees:
             self.logger.error("Error getting employees.")
             exit(1)
         if 'employees' not in employees:
             self.logger.error("Error getting employees.")
             exit(1)
-
-        with open(self.fname, 'w+') as f:
+        with open(self.fname, 'r+') as f:
             try:
-                curr = json.loads(f.read())
-                if today in curr:
-                    curr.update(today, employees)
-                return
-            except ValueError:
+                curr = json.load(f)
+                if today not in curr:
+                    curr[today] = employees
+                f.seek(0)
+                json.dump(curr, f)
+                f.truncate()
+            except ValueError as e:
                 employees = {today: employees}
                 json.dump(employees, f)
+                f.truncate()
             f.close()
             return
 
